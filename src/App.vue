@@ -2,97 +2,90 @@
 import { ref, reactive } from "vue";
 
 let difficulty = ref(1);
-let frontPage = ref(true);
+let facePerDifficulty = ref(10);
+let pageNum = ref(0);
 let score = ref(0);
 let name = ref("");
 let inputName = ref("");
 
 let faceSlots = reactive([0, 0, 0, 0, 0, 0, 0, 0, 0]); // ถ้าไม่มี จะเป็นเลข 0 ถ้ามีหน้า จะเป็น 1 2 3 4 5
 let faceStay; // ตัวแปรไว้เก็บ setTimeout
-let hearts = ref("3"); // 0 คือ ไม่มีหัวใจ 1 คือมีหัวใจ
-// const faces = [
-//   {
-//     src:"/src/assets/image/face/face_1.png",
-//     srcHit:"/src/assets/image/face/face_1_hit.png"
-//   },
-//   {
-//     src:"/src/assets/image/face/face_2.png",
-//     srcHit:"/src/assets/image/face/face_2_hit.png"
-//   },
-//   {
-//     src:"/src/assets/image/face/face_3.png",
-//     srcHit:"/src/assets/image/face/face_3_hit.png"
-//   },
-//   {
-//     src:"/src/assets/image/face/face_4.png",
-//     srcHit:"/src/assets/image/face/face_4_hit.png"
-//   },
-//   {
-//     src:"/src/assets/image/face/face_5.png",
-//     srcHit:"/src/assets/image/face/face_5_hit.png"
-//   }
-// ]
+let heart = ref(3); // 0 คือ ไม่มีหัวใจ 1 คือมีหัวใจ
 
-//Menu page function
+let sounds = {
+  background:"gamesound.mp3",
+  punch:"punch.mp3"
+}
+
+//Menu Page Function
 const start = (setDifficulty) => {
-  frontPage.value = !frontPage;
+  pageNum.value = 1;
   difficulty.value = setDifficulty;
-  name.value = inputName.value;
-  hearts.value = 3;
+  inputName.value.length > 0 ? name.value = inputName.value : name.value = "Unknown"
+  heart.value = 3;
+  score.value = 0;
+//  playSound(sounds.background,1,false)
   faceSpawn()
 };
 const faceSpawn = () => {
   setTimeout(function () {
   let randomFace = 1 + Math.floor(Math.random() * 5); // random 1-5
   let randomSlot = Math.floor(Math.random() * 9); // random 0-8
-
   faceSlots[randomSlot] = randomFace;
-
+  
   //จับเวลาก่อนตุ่นหายไป
   faceStay = setTimeout(function () {
     faceSlots[randomSlot] = 0;
-    score.value--;
-    hearts--;
-    faceSpawn();
+    heart.value--;
+    heart.value > 0 ? faceSpawn() : pageNum.value = 2
   }, 4000 / difficulty.value);
-  // setTimeout(function () {
-  //   /* เวลาหมด เรียกหน้า อาจเช็คเป็นสถานะแทน */
-  // }, 4000 / difficulty.value);
-  console.log(faceSlots)
+
   }, 3000 / difficulty.value);
 };
 
-const faceHit = (index) => {
+const faceHit = (face,index) => {
+  if(typeof face === 'string') return;
   clearTimeout(faceStay);
+  // testAudio.currentTime = 0
+  // testAudio.play()
+  playSound("punch.mp3",1,false)
   score.value++;
 
-  faceSlots[index] = 0;
-  // กดโดน หน้าเปลี่ยน อาจเช็คเป็นสถานะแทน
-  // setTimeout(function () {
-  //   /* เวลาหมด ลบหน้า */
-  // }, 1000 / difficulty.value);
+  faceSlots[index] = `${face}_hit`
+  setTimeout(function () {
+    faceSlots[index] = 0;
+  // }, 600);  พอดีเราอยากให้มันปรับไปตามความเร็ว เพราะบางครั้งเวลามันเร็วมากๆ ละมันเกิดทับกันมัน มันจะมองไม่ออก
+  }, 1000 / (difficulty.value / 2));
 
-      faceSpawn(); // เรียกหน้าหลังตี
+  // if (score.value % 10 === 0) { difficulty.value += 4 }
+  if (score.value % facePerDifficulty.value === 0) { difficulty.value++ }
+  faceSpawn(); // เรียกหน้าหลังตี
 };
 
-const randomFace = () => {
-  return require('')
-}
+  const playSound = (soundPath,volume,isLoop) => {
+    let sound = new Audio(`/src/assets/sound/${soundPath}`)
+    sound.volume = volume;
+    sound.play();
+    
+    if(isLoop){
+      sound.loop();
+    }
+  }
 
-const gameOver = () => {};
 
-const quit = () => {};
+
 </script>
 
 <template>
-  <div class>
+  <div>
+    <iframe src="/src/assets/sound/gamesound.mp3" allow="autoplay" style="display:none"></iframe>
     <div class="flex h-screen">
       <div
         id="background"
         class="flex flex-col justify-center items-center"
-        v-show="frontPage"
+        v-show="pageNum === 0"
       >
-        <img src="./assets/image/logo/logo.png" class="w-1/6" />
+        <img src="./assets/image/logo/logo.png" class="w-1/3" />
         <div
           id="nameContainer"
           class="flex flex-row justify-center items-center"
@@ -105,57 +98,87 @@ const quit = () => {};
             v-model="inputName"
           />
         </div>
-        <div
-          class="flex flex-row w-full mx-auto justify-center items-center content-center"
-        >
-          <img
+        <div class="flex flex-row w-full mx-auto justify-center items-center content-center">
+          <img 
             src="./assets/image/button/btn_easy.png"
             class="difficulty"
-            @click="start(2)"
+            @click="start(3)"
           />
           <img
             src="./assets/image/button/btn_normal.png"
             class="difficulty"
-            @click="start(4)"
+            @click="start(5)"
           />
           <img
-            src="./assets/image/button/btn_difficult.png"
+            src="./assets/image/button/btn_difficulty.png"
             class="difficulty"
-            @click="start(20)"
+            @click="start(8)"
           />
         </div>
       </div>
+      <div v-show="pageNum === 1" class="w-full flex flex-col justify-center items-center">
+      <div class="w-4/5 flex flex-row justify-between">
 
-      <div v-show="!frontPage" class="w-full flex flex-col justify-center items-center">
-       
-       <div class="w-full flex flex-row justify-between">
-
-        <div>
+        <div class="woodContainer w-1/6 flex flex-col items-center">
           <!-- ใส่ใจที่นี่ -->
-          <ul id="heartContainer" class="flex flex-row">
-            <li v-for="(heart,index) in hearts" :key="index" >
-              <img v-show="index < hearts" src="./assets/image/elements/heart.png"/>
+        <ul id="heartGrid" class="w-3/5 grid grid-cols-3 justify-left">
+            <li v-for="index in heart" :key="index" class="w-full">
+              <img id="heart" class="w-full" v-show="index <= heart" src="./assets/image/elements/heart.png"/>
             </li>
-          </ul>
-        
-          
+      </ul>
         </div>
-        
-        <div>
-          <p>Name : {{ name }}</p>
+         <div class="woodContainer w-1/6 h-/6 flex flex-col items-start pt-6 pl-16">
+  
+          <p>Name : {{ name }}</p> 
           <p>Score : {{ score }}</p>
         </div>
+
         </div>
-        
-        <button @click="faceSpawn">test Spawn</button>
+
         <ul class="grid-container">
           <li v-for="(face,index) in faceSlots" :key="index" class="grid-item">
-            <img v-if="face !== 0" :src="`/src/assets/image/face/face_${face}.png`" @click="faceHit(index)" class="face"/>
+            <img v-if="face !== 0" :src="`/src/assets/image/face/face_${face}.png`" @mousedown="faceHit(face,index)" class="face"/>
           </li>
         </ul>
       </div>
+      
+      <div v-show="pageNum === 2" class="w-full flex flex-col justify-center items-center">
+        <div
+          id="gameOverText"
+          class="flex flex-col w-full mx-auto justify-center items-center content-center"
+        >
+          <p>Game Over</p>
+        </div>
+        <div 
+          class="flex flex-row w-full mx-auto justify-center items-center content-center"
+          style="column-gap: 40px"
+        >
+          <p>Name: {{name}}</p>
+          <p>Score: {{score}}</p>
+        </div>
+        <div
+          id="gameOverText"
+          class="flex flex-col w-full mx-auto justify-center items-center content-center"
+          @click="pageNum = 0"
+        >
+          <p>Quit</p>
+        </div>
+
+      </div>
+        <div>
+          <img
+          src="./assets/image/set/setting.png"
+          class="setting"
+          >
+        </div>
     </div>
+ 
   </div>
+
+  
+ 
+
+
 </template>
 
 <style>
@@ -177,8 +200,28 @@ body {
   background-size: 100%;
   background-position: bottom;
   background-attachment: fixed;
+  cursor: url(./assets/image/click/click1.png) 24 50, auto;
+  
+  user-drag: none; 
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
+img{
+    user-drag: none; 
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+body:active {
+  cursor: url(./assets/image/click/click2.png) 44 50, auto;
+}
 
 #nameContainer {
   /* width: 500px;
@@ -190,7 +233,6 @@ body {
   min-height: 140px;
   font-size: 1.1vw;
   margin-bottom: -1rem;
-  background: red;
   background: url(./assets/image/wood/wood_1.png);
   background-repeat: no-repeat;
   background-size: 100%;
@@ -204,9 +246,7 @@ body {
   text-shadow: 1px 3px 0px rgba(0, 0, 0, 0.94);
 }
 
-#heartContainer {
-  width: 33%;
-  height: 20%;
+.woodContainer {
   min-width: 350px;
   min-height: 140px;
   background: url(./assets/image/wood/wood_1.png);
@@ -214,13 +254,37 @@ body {
   background-size: 100%;
 }
 
-#heart {
-  width: 10%;
-  height: 10%;
-  min-width: 30px;
-  min-height: 30px;
+#heartGrid {
+  margin-top:6%;
+}
 
- 
+#heart {
+  min-width: 50px;
+  min-height: 50px;
+  width: 30%;
+}
+
+/* #scorebroad {
+  min-width: 350px;
+  min-height: 140px;
+  background: url(./assets/image/wood/wood_1.png);
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-position: center;
+} */
+
+#gameOverText {
+  width: 33%;
+  height: 20%;
+  min-width: 330px;
+  min-height: 140px;
+  font-size: 1.5vw;
+  margin-bottom: -1rem;
+  background: red;
+  background: url(./assets/image/wood/wood_1.png);
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-position: center;
 }
 
 .difficulty {
@@ -230,9 +294,20 @@ body {
   backface-visibility: hidden;
 }
 
+.setting {
+  width: 20%;
+  transition: 0.5s ease;
+  opacity: 1;
+  backface-visibility: hidden;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 130px;
+}
+
 .difficulty:hover {
-  cursor: pointer;
-  opacity: 0.4;
+  cursor: url(./assets/image/click/click2.png) 44 50, auto;
+  opacity: 0.5;
 }
 
 .grid-container {
@@ -248,13 +323,15 @@ body {
 
 .grid-item {
   display: flex;
-  background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.8);
+  background: url(./assets/image/elements/soil.png);
+  background-size: 100%;
+  /* border: 1px solid rgba(0, 0, 0, 0.8); */
   font-size: 30px;
   text-align: center;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
+  border-radius: 1vw;
+  /* cursor: url(./assets/image/click/click2.png), auto; */
 }
 
 .face {
