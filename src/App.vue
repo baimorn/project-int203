@@ -4,9 +4,10 @@ import { ref, reactive } from "vue";
 let bgSound = null;
 
 let difficulty = ref(1);
-let pageNum = ref(0);
+let soundVolume = ref(80);
+let pageNumber = ref(0);
 let isShowSetting = ref(false);
-let isGameOver = true;
+let isGameOver = ref(true);
 
 let heart = ref(3); 
 let score = ref(0);
@@ -14,10 +15,13 @@ let name = ref("");
 
 let inputName = ref("");
 let initDiff = ref(0);    // ไว้ใช้กะปุ่ม restart
-let initDiffString = ref("มึงยังไม่ได้เลือกครับคุณพี่");
+let initDiffString = ref("");
 
+let gameRun; //เก็บ interval ที่เป็นการทำงานของเกม
 let faceSlots = reactive([0, 0, 0, 0, 0, 0, 0, 0, 0]); // ถ้าไม่มี จะเป็นเลข 0 ถ้ามีหน้า จะเป็น 1 2 3 4 5
 let faceStay; // ตัวแปรไว้เก็บ setTimeout
+
+let backgroundImages = ["day","night"]
 
 let sounds = {
   background:"gamesound.mp3",
@@ -28,8 +32,10 @@ let sounds = {
 
 //Menu Page Function
 const start = (setDifficulty, setDifficultyString) => {
-  if(bgSound === null) bgSound = playSound(sounds.background, 0, true)
-  pageNum.value = 1;
+  if(bgSound === null) {bgSound = playSound(sounds.background, 0.2, true)
+    bgSound.defaultVolume = bgSound.volume;
+  }
+  pageNumber.value = 1;
   initDiff.value = setDifficulty;
   initDiffString.value = setDifficultyString;
   difficulty.value = initDiff.value;
@@ -37,18 +43,24 @@ const start = (setDifficulty, setDifficultyString) => {
   inputName.value.length > 0 ? name.value = inputName.value : name.value = "Unknown";
   heart.value = 3;
   score.value = 0;
-  isGameOver = false;
+  isGameOver.value = false;
 
-  const gameRun = setInterval(function() {
-    isGameOver ? clearInterval(gameRun) : faceSpawn();
+  gameRun = setInterval(function() {
+    faceSpawn();
     if(difficulty.value % 10) difficulty.value+=0.3;
   }, 8000 / difficulty.value);
   
 };
 
 const restart = () => {
-
+  if(!isGameOver.value) gameOver();
+  console.log(faceSlots)
   start(initDiff.value, initDiffString.value);  // restart เร็วเกินบัคครับ
+}
+
+const backToMenu = () => {
+  if(!isGameOver.value) gameOver();
+  pageNumber.value = 0;
 }
 
 const faceSpawn = () => {
@@ -58,7 +70,7 @@ const faceSpawn = () => {
 
   faceStay = setTimeout(function () {
     faceSlots[randomSlot] = 0;
-    if(heart.value === 1 && !isGameOver) {
+    if(heart.value === 1 && !isGameOver.value) {
       gameOver();
     }else {
       playSound(sounds.heart, 0.1, false);
@@ -81,7 +93,7 @@ const faceHit = (face,index) => {
 
 const playSound = (soundPath, volume, isLoop) => {
   let sound = new Audio(`/src/assets/sound/${soundPath}`)
-  sound.volume = volume;
+  sound.volume = volume * soundVolume.value/100;
   sound.play();
   
   if(isLoop){ sound.loop = true };
@@ -92,32 +104,33 @@ const gameOver = () => {
   let bgSoundVolume = bgSound.volume;
   bgSound.volume = 0;
   playSound(sounds.gameover, 0.3, false)
-  isGameOver = true;
-  pageNum.value = 2;
+
+  clearInterval(gameRun);
+  isGameOver.value = true;
+  pageNumber.value = 2;
 
   setTimeout(() => {
     bgSound.volume = bgSoundVolume;
   },3000);
 }
 
-const toggleSetting = () => {
-  
-    isShowSetting.value = !isShowSetting.value ;
+const changeBackgroundVolume = () => {
+    bgSound.volume = bgSound.defaultVolume * soundVolume.value/100;
+}
 
-    console.log(isShowSetting.value)
+const toggleSetting = () => {
+    isShowSetting.value = !isShowSetting.value ;
 }
 </script>
 
 <template>
-  
-  <div>
+  <div id="gameWindow">
     <!-- <iframe src="/src/assets/sound/gamesound1.mp3" allow="autoplay" style="display:none"></iframe> -->
-    <div class="flex h-screen">
-
+    <div class="a flex w-full h-screen" > 
       <div
         id="background"
         class="flex flex-col justify-center items-center"
-        v-show="pageNum === 0"
+        v-show="pageNumber === 0"
       >
         <img src="./assets/image/logo/logo.png" class="w-1/3" />
         <div
@@ -148,7 +161,7 @@ const toggleSetting = () => {
         </div>
       </div>
       
-      <div v-show="pageNum === 1" class="w-full flex flex-col justify-center items-center">
+      <div v-show="pageNumber === 1" class="w-full flex flex-col justify-center items-center">
         <div class="w-4/5 flex flex-row justify-between">
           <div class="woodContainer w-1/6 flex flex-col items-center">
             <ul id="heartGrid" class="w-3/5 grid grid-cols-3 justify-left">
@@ -169,7 +182,7 @@ const toggleSetting = () => {
         </ul>
       </div>
       
-      <div v-show="pageNum === 2" class="w-full flex flex-col justify-center items-center gap-y-3">
+      <div v-show="pageNumber === 2" class="w-full flex flex-col justify-center items-center gap-y-3">
         <div
           class="gameOverText flex w-2/5 mx-auto justify-center items-center content-center "
         >
@@ -183,47 +196,53 @@ const toggleSetting = () => {
         </div>
 
         <div class="flex flex-row w-1/3 justify-center">
-          <img src="./assets/image/setlast/restart1.png"
+          <img src="./assets/image/button/restart.png"
             class="settings"
-            v-show="pageNum === 2"
+            v-show="pageNumber === 2"
             @click="restart()"
           />
-          <img src="./assets/image/setlast/home1.png"
+          <img src="./assets/image/button/home.png"
             class="settings"
-            v-show="pageNum === 2"
-            @click="pageNum = 0"
+            v-show="pageNumber === 2"
+            @click="backToMenu()"
           />
         </div>
      
       </div>
       
       <div class="settingsContainer flex flex-row">
-        <img src="./assets/image/set/setting.png"
+        <img src="./assets/image/button/setting.png"
           class="settings"
           @click="toggleSetting()"
         />
       </div>
     </div>
     
-     <div id="settingbroad" class="top-0 w-full h-full absolute flex justify-center" v-show="isShowSetting" >
-    <div id="settingBackground" class="flex flex-col items-center w-4/6 h-full">
-    <div class="flex flex-row gap-x-48 w-1/2 justify-end items-center content-end">
-      <h2 class="">SETTINGS</h2>
-      <span class="close text-3xl" @click="toggleSetting()">&times;</span>
-      
+     <div id="settingBroad" class="top-0 w-full h-full absolute flex justify-center" v-show="isShowSetting" >
+    <div id="settingBackground" class="flex flex-col gap-y-6 items-center pt-36 w-4/6">
+     <span class="w-1/6 close text-3xl absolute right-28" @click="toggleSetting()">&times;</span>
+    <div id="settingTopic" class="flex flex-row items-center">
+      <h2 class="text-2xl">SETTINGS</h2>
     </div>
-    <div class="modal-body">
-      <p>Change Background</p>
-      <!-- มีปุ่มปรับเสียงป่ะ -->
+
+    <div class="flex flex-col items-start w-3/6 gap-y-2">
+      <p>Change Background : </p>
+      <div class="flex flex-row">
+      <li v-for="(image,index) in backgroundImages" :key="index" class="flex flex-col w-1/4 list-none">
+            <img :src="`/src/assets/image/background/${image}_icon.png`"/>
+          </li>
+      </div>
+
+      <p>Volume : </p>
+      <div id="volumeSetting" class="grid w-full justify-center">
+      <input v-model="soundVolume" type="range" min="0" max="100" class="w-5/6" id="volumeSlider" @change="changeBackgroundVolume()">
+      <p>{{soundVolume}}</p>
+    </div>
     </div>
     
-    <div class="modal-footer">
-      <img src="./assets/image/setlast/restart1.png" class="settingsModal" @click="restart(); toggleSetting()"/>
-      <!-- ถ้า restart โดยที่ยังไม่เคยกดเล่น เกมจะงง อาจใส่แค่หน้าท้ายก็พอมั้ง -->
-
-      <!-- กด setting แล้วให้ทุกอย่างหยุดแมะ -->
-      <!-- เราไม่รู้นะ แต่เห็น setTimeout มันหยุดไม่ได้ ได้แต่ clear -->
-      <img src="./assets/image/setlast/home1.png" class="settingsModal" @click="pageNum = 0; toggleSetting()"/>
+    <div v-show="!isGameOver" class="bottom-40 absolute flex flex-row justify-center gap-x-8">
+      <img src="./assets/image/button/restart.png" class="settingsModal" @click="restart(); toggleSetting()"/>
+      <img src="./assets/image/button/home.png" class="settingsModal" @click="backToMenu(); toggleSetting()"/>
      
           </div>
         </div>
@@ -237,8 +256,7 @@ const toggleSetting = () => {
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 
 
-
-#settingbroad {
+#settingBroad {
   background-color: rgba(0,0,0,0.4); 
 }
 
@@ -249,7 +267,8 @@ const toggleSetting = () => {
   background-size: 100%;
   background-position: center;
   background-repeat: no-repeat;
-
+  min-width:1000px;
+  height: 100%;
   /* box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19); */
   -webkit-animation-name: animatetop;
   -webkit-animation-duration: 0.4s;
@@ -309,17 +328,11 @@ const toggleSetting = () => {
   opacity: 0.6;
 }
 
-.topic {
-  margin-left: 40%;
-  margin-top: 10%
+#volumeSetting {
+  grid-template-columns: 90% 10%;
 }
 
-* {
-  margin:0;
-  padding:0;
-}
-
-body {
+#gameWindow {
   font-family: "Press Start 2P";
   font-size: 16px;
   text-shadow: 1px 3px 0px rgba(0, 0, 0, 0.94);
@@ -347,7 +360,7 @@ img{
   -ms-user-select: none;
 }
 
-body:active {
+#gameWindow:active {
   cursor: url(./assets/image/click/click2.png) 44 50, auto;
 }
 
