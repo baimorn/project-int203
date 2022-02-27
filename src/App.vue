@@ -21,7 +21,8 @@ let gameRun; //เก็บ interval ที่เป็นการทำงา�
 let faceSlots = reactive([0, 0, 0, 0, 0, 0, 0, 0, 0]); // ถ้าไม่มี จะเป็นเลข 0 ถ้ามีหน้า จะเป็น 1 2 3 4 5
 let faceStay; // ตัวแปรไว้เก็บ setTimeout
 
-let backgroundImages = ["day","night"]
+let backgrounds = reactive(["bg-day","bg-night"]);
+let selectedBackground = ref(0);
 
 let sounds = {
   background:"gamesound.mp3",
@@ -33,7 +34,7 @@ let sounds = {
 //Menu Page Function
 const start = (setDifficulty, setDifficultyString) => {
   if(bgSound === null) {bgSound = playSound(sounds.background, 0.2, true)
-    bgSound.defaultVolume = bgSound.volume;
+    bgSound.defaultVolume = 0.2;
   }
   pageNumber.value = 1;
   initDiff.value = setDifficulty;
@@ -115,7 +116,7 @@ const gameOver = () => {
 }
 
 const changeBackgroundVolume = () => {
-    bgSound.volume = bgSound.defaultVolume * soundVolume.value/100;
+    if(bgSound !== null) bgSound.volume = bgSound.defaultVolume * soundVolume.value/100;
 }
 
 const toggleSetting = () => {
@@ -124,8 +125,7 @@ const toggleSetting = () => {
 </script>
 
 <template>
-  <div id="gameWindow">
-    <!-- <iframe src="/src/assets/sound/gamesound1.mp3" allow="autoplay" style="display:none"></iframe> -->
+  <div id="gameWindow" :class="backgrounds[selectedBackground]">
     <div class="a flex w-full h-screen" > 
       <div
         id="background"
@@ -228,8 +228,8 @@ const toggleSetting = () => {
     <div class="flex flex-col items-start w-3/6 gap-y-2">
       <p>Change Background : </p>
       <div class="flex flex-row">
-      <li v-for="(image,index) in backgroundImages" :key="index" class="flex flex-col w-1/4 list-none">
-            <img :src="`/src/assets/image/background/${image}_icon.png`"/>
+      <li v-for="(background,index) in backgrounds" :key="index" class="flex flex-col w-1/4 list-none">
+            <img :src="`/src/assets/image/background/${background}_icon.png`" @click="selectedBackground = index"/>
           </li>
       </div>
 
@@ -269,7 +269,6 @@ const toggleSetting = () => {
   background-repeat: no-repeat;
   min-width:1000px;
   height: 100%;
-  /* box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19); */
   -webkit-animation-name: animatetop;
   -webkit-animation-duration: 0.4s;
   animation-name: animatetop;
@@ -300,21 +299,6 @@ const toggleSetting = () => {
   cursor: pointer;
 }
 
-.modal-header {
-  size: 50px 400px;
-  padding: 20px;
-  /* padding: 50px 400px; */
-  /* background-color: #FF6633; */
-  
-  color: white;
-}
-
-.modal-body {
-  color: rgb(189, 30, 30);
-  size: 50px 400px;
-  /* padding: 20px; */
-  }
-
 .settingsModal {
   transition: 0.5s ease;
   opacity: 1;
@@ -338,7 +322,6 @@ const toggleSetting = () => {
   text-shadow: 1px 3px 0px rgba(0, 0, 0, 0.94);
   color: white;
   overflow: hidden;
-  background: url(./assets/image/background/day.jpg);
   background-repeat: no-repeat;
   background-size: 100%;
   background-position: bottom;
@@ -350,6 +333,14 @@ const toggleSetting = () => {
   -webkit-user-drag: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+}
+
+.bg-day {
+  background: url(./assets/image/background/bg-day.jpg);
+}
+
+.bg-night {
+  background: url(./assets/image/background/bg-night.jpg);
 }
 
 img{
@@ -402,15 +393,6 @@ img{
   width: 30%;
 }
 
-/* #scorebroad {
-  min-width: 350px;
-  min-height: 140px;
-  background: url(./assets/image/wood/wood_1.png);
-  background-repeat: no-repeat;
-  background-size: 100%;
-  background-position: center;
-} */
-
 .gameOverText {
   width: 33%;
   height: 20%;
@@ -424,11 +406,6 @@ img{
   background-size: 100%;
   background-position: center;
 }
-
-/* #gameOverText:hover {
-  cursor: url(./assets/image/click/click2.png) 44 50, auto;
-  opacity: 0.6;
-}  */
 
 .settingsContainer {
   position: fixed;
@@ -479,18 +456,15 @@ img{
   display: flex;
   background: url(./assets/image/elements/soil.png);
   background-size: 100%;
-  /* border: 1px solid rgba(0, 0, 0, 0.8); */
   font-size: 30px;
   text-align: center;
   justify-content: center;
   align-items: center;
   border-radius: 1vw;
-  /* cursor: url(./assets/image/click/click2.png), auto; */
 }
 
 .face {
   width: 10vw;
-
 }
 
 
