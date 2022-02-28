@@ -24,12 +24,15 @@
 ## RULE + HOW TO PLAY !
 1. ผู้เล่นเลือก mode ของการเล่นเกม และใส่ชื่อของผู้เล่น 
 ![1](https://github.com/baimorn/project-int203/blob/main/image/2.jpg)
+
 2. เมื่อเริ่มเกม จะมีหน้าตัวละครขึ้นมา ตามการ Random ของเวลาตาม mode ที่ผู้เล่นเลือก
 ![2](https://github.com/baimorn/project-int203/blob/main/image/4-1.jpg)
+
 3. ผู้เล่นใช้เมาส์คลิก เพื่อเป็นการเล่นเกม โดยจะต้องคลิกเมาส์แทนการตีตัวละคร
 4. โดยการตีตัวละครนั้น จะต้องตีให้ทันกับเวลาก่อนที่ตัวละคร จะมุดลงดินไป
 ![3](https://github.com/baimorn/project-int203/blob/main/image/3-1.jpg)
 
-7. ถ้าผู้เล่นตีตัวละครไม่ทัน จะทำให้เสียหัวใจในครั้งนั้น หากเสียหัวใจเกิน 3 รอบ เกมจะหยุดและถือว่าผู้เล่นเกมแพ้ 
-
+5. ถ้าผู้เล่นตีตัวละครไม่ทัน จะทำให้เสียหัวใจในครั้งนั้น หากเสียหัวใจเกิน 3 รอบ เกมจะหยุดและถือว่าผู้เล่นเกมแพ้ 
+![4](https://github.com/baimorn/project-int203/blob/main/image/6-1.jpg)
+![5](https://github.com/baimorn/project-int203/blob/main/image/5.jpg)
 
