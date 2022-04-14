@@ -1,0 +1,29 @@
+{
+    "players": [
+      {
+        "id": 1,
+        "name": "Baimorn",
+        "score": 30
+      },
+      {
+        "id": 2,
+        "name": "Mos",
+        "score": 70
+      },
+      {
+        "id": 3,
+        "name": "Dream",
+        "score": 44
+      },
+      {
+        "id": 4,
+        "name": "Zin",
+        "score": 37
+      },
+      {
+        "id": 5,
+        "name": "Que",
+        "score": 50
+      }
+    ]
+  }
